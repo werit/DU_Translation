@@ -68,16 +68,67 @@ def TaskOne(df_sk,df_hu):
     print(f'Beta_1 je {estim[0]}')
 
 def Sigmoid(vector):
+    '''
+    @vector is an array-like structure
+    '''
     return 1/(1+np.exp(-vector))
 
+def fnLstOrd(string):
+    return np.array([ord(letter) for letter in string])
+
+def PrepareFeatures(df_sk,df_hu):
+    '''
+    Metoda pripravy slova zo slovnika, ako podklad pre log regresiu
+    '''
+    #np.random.mult
+    return np.random.randint(9,size=(4,3))
+
+
+def LogReg(features,weights,learning_rate,repeats):
+    '''
+    '''
+    for i in range(repeats):
+        scores = np.dot(features, weights)
+        predictions = sigmoid(scores)
+
+        # Update weights with gradient
+        output_error_signal = target - predictions
+        gradient = np.dot(features.T, output_error_signal)
+        weights += learning_rate * gradient
+
+    return weights
+
+def Multpl(feat,weights):
+    result = np.zeros(shape=(feat.shape[0],1))
+    for i in np.arange(feat.shape[0]):
+        result[i]= np.dot(feat[i],weights)
+    return result
+
 # tu spravim logisticku regresiu
-def TaskTwo(df_sk,df_hu):
+def TaskTwo(df_sk,df_hu,learning_rate):
     '''
     Mix the data
     Calculate Logistic regresion
     '''
-    print(Sigmoid(np.dot([-1,2,5],[[2],[3],[8]])))
-    pass
+    arr =np.array([1,2,3,5])
+    features=PrepareFeatures(df_sk,df_hu)
+    # set weights to zero
+    weights = np.zeros(features.shape[1])
+    df_sk['ch_rep'] = df_sk['word'].apply(fnLstOrd)
+    a = np.array([0,0])
+    b = df_sk['ch_rep'].head()
+    print(f'A shape is {a.shape}.')
+    print(f'B shape is {b.shape}.')
+    bm = np.array(b)
+    print(Multpl(b,a))
+    #print(np.dot(b,a))#[1].shape)
+    #print([fnLstOrd(wrd) for wrd in df_sk['word'].head()])
+    for i in np.arange(20):
+        pass
+    #LogReg(features,weights,learning_rate,3000)
+
+    print(Sigmoid(arr))
+
 
 # main metoda
 def main():
@@ -98,7 +149,7 @@ def main():
     # if check is ok then continue
     if DoCheck(dframe_hu,dframe_sk):
         TaskOne(df_sk=dframe_sk,df_hu=dframe_hu)
-        TaskTwo(df_sk=dframe_sk,df_hu=dframe_hu)
+        TaskTwo(df_sk=dframe_sk,df_hu=dframe_hu,learning_rate=0.5)
     else:
         print('Dataframes do not match!')
 
