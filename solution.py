@@ -87,13 +87,26 @@ def PrepareFeatures(df_sk,df_hu):
     '''
     Metoda pripravy slova zo slovnika, ako podklad pre log regresiu
     '''
+
     c = df_sk[0]
     for i in range(df_sk.count()-1):
         c = np.row_stack((c,df_sk[i+1]))
-    return c
+    for i in range(df_hu.count()):
+        c = np.row_stack((c,df_hu[i]))
+
+    perm = np.random.permutation(len(c))
+    # sk je 0
+    zr = np.zeros(df_sk.count())
+    # hu je 1
+    on = np.ones(df_hu.count())
+    print(f'Toto je ones: {on}')
+    print(f'Test row_stack je :{np.append(zr,on)}')
+    target = np.append(zr,on)[perm]
+
+    return c[perm],target
 
 
-def LogReg(features,weights,learning_rate,repeats):
+def LogReg(features,targets,weights,learning_rate,repeats):
     '''
     '''
     for i in range(repeats):
@@ -101,7 +114,8 @@ def LogReg(features,weights,learning_rate,repeats):
         predictions = Sigmoid(scores)
 
         # Update weights with gradient
-        output_error_signal = target - predictions
+        output_error_signal = targets - predictions
+        print(output_error_signal)
         gradient = np.dot(features.T, output_error_signal)
         weights += learning_rate * gradient
 
@@ -116,15 +130,13 @@ def TaskTwo(df_sk,df_hu,learning_rate):
 
     df_sk['ch_rep'] = df_sk['word'].apply(fnLstOrd)
     df_hu['ch_rep'] = df_sk['word'].apply(fnLstOrd)
-    features=PrepareFeatures(df_sk['ch_rep'],df_hu['ch_rep'])
+    features,targets = PrepareFeatures(df_sk['ch_rep'],df_hu['ch_rep'])
 
     print(f'Features shape is: {features.shape}')
     # set weights to zero
     weights = np.zeros(features.shape[1])
 
-    WG = LogReg(features=features,weights=weights,learning_rate=0.5,repeats=3000)
-    #print(f'Weights shape is {weights.shape}.')
-    #print(f'Finale je:{np.dot(features, weights)}')
+    WG = LogReg(features=features,targets=targets,weights=weights,learning_rate=0.5,repeats=3000)
     print(f'Final weights are: {WG}')
 
 
