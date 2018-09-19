@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 from pandas import Series, DataFrame
 from numpy.linalg import inv
+import os
+
 
 # metoda na citanie suboru sk.dic
 def ReadFileToDataFrame(file_name,do_filtering=True):
@@ -16,6 +18,10 @@ def ReadFileToDataFrame(file_name,do_filtering=True):
     else:
         enc = 'UTF-16'
     #file_name = 'sk.dic'
+    # get working directory
+    #cwd = os.getcwd()
+    #print(cwd)
+
     with open(file_name,'r', encoding=enc) as f:
         cont = f.readlines()
         if do_filtering:
@@ -74,14 +80,17 @@ def Sigmoid(vector):
     return 1/(1+np.exp(-vector))
 
 def fnLstOrd(string):
-    return np.array([ord(letter) for letter in string])
+    # 30 mam ako za najdlhsie slovo...nemal by som to pouzivat takto
+    return np.append(np.array([ord(letter) for letter in string]),np.zeros(30-len(string)),0)
 
 def PrepareFeatures(df_sk,df_hu):
     '''
     Metoda pripravy slova zo slovnika, ako podklad pre log regresiu
     '''
-    #np.random.mult
-    return np.random.randint(9,size=(4,3))
+    c = df_sk[0]
+    for i in range(df_sk.count()-1):
+        c = np.row_stack((c,df_sk[i+1]))
+    return c
 
 
 def LogReg(features,weights,learning_rate,repeats):
@@ -89,7 +98,7 @@ def LogReg(features,weights,learning_rate,repeats):
     '''
     for i in range(repeats):
         scores = np.dot(features, weights)
-        predictions = sigmoid(scores)
+        predictions = Sigmoid(scores)
 
         # Update weights with gradient
         output_error_signal = target - predictions
@@ -98,36 +107,25 @@ def LogReg(features,weights,learning_rate,repeats):
 
     return weights
 
-def Multpl(feat,weights):
-    result = np.zeros(shape=(feat.shape[0],1))
-    for i in np.arange(feat.shape[0]):
-        result[i]= np.dot(feat[i],weights)
-    return result
-
 # tu spravim logisticku regresiu
 def TaskTwo(df_sk,df_hu,learning_rate):
     '''
     Mix the data
     Calculate Logistic regresion
     '''
-    arr =np.array([1,2,3,5])
-    features=PrepareFeatures(df_sk,df_hu)
+
+    df_sk['ch_rep'] = df_sk['word'].apply(fnLstOrd)
+    df_hu['ch_rep'] = df_sk['word'].apply(fnLstOrd)
+    features=PrepareFeatures(df_sk['ch_rep'],df_hu['ch_rep'])
+
+    print(f'Features shape is: {features.shape}')
     # set weights to zero
     weights = np.zeros(features.shape[1])
-    df_sk['ch_rep'] = df_sk['word'].apply(fnLstOrd)
-    a = np.array([0,0])
-    b = df_sk['ch_rep'].head()
-    print(f'A shape is {a.shape}.')
-    print(f'B shape is {b.shape}.')
-    bm = np.array(b)
-    print(Multpl(b,a))
-    #print(np.dot(b,a))#[1].shape)
-    #print([fnLstOrd(wrd) for wrd in df_sk['word'].head()])
-    for i in np.arange(20):
-        pass
-    #LogReg(features,weights,learning_rate,3000)
 
-    print(Sigmoid(arr))
+    WG = LogReg(features=features,weights=weights,learning_rate=0.5,repeats=3000)
+    #print(f'Weights shape is {weights.shape}.')
+    #print(f'Finale je:{np.dot(features, weights)}')
+    print(f'Final weights are: {WG}')
 
 
 # main metoda
