@@ -94,6 +94,9 @@ def PrepareFeatures(df_sk,df_hu):
     for i in range(df_hu.count()):
         c = np.row_stack((c,df_hu[i]))
 
+    intercept = np.ones((c.shape[0],1))
+    c = np.concatenate((intercept,c),axis=1)
+    np.random.seed(42)
     perm = np.random.permutation(len(c))
     # sk je 0
     zr = np.zeros(df_sk.count())
@@ -101,22 +104,33 @@ def PrepareFeatures(df_sk,df_hu):
     on = np.ones(df_hu.count())
     print(f'Toto je ones: {on}')
     print(f'Test row_stack je :{np.append(zr,on)}')
-    target = np.append(zr,on)[perm]
+    target = np.append(zr,on)
+    print(f'Perm je {perm}')
 
-    return c[perm],target
+    return c[perm],target[perm]
 
 
 def LogReg(features,targets,weights,learning_rate,repeats):
     '''
     '''
-    for i in range(repeats):
+    print(f'Features are: {features.T}')
+    for i in range(5):
         scores = np.dot(features, weights)
-        predictions = Sigmoid(scores)
-
+        print(f'Scores are: {scores}')
+        predictions = Sigmoid(scores)>=0.5
+        print(f'Predic are: {predictions}')
+        print(f'Targ are: {targets}')
         # Update weights with gradient
         output_error_signal = targets - predictions
-        print(output_error_signal)
-        gradient = np.dot(features.T, output_error_signal)
+        print(f'OUT err: {np.sum(output_error_signal)}')
+        print(f'Feeat trans shape is: {features.T.shape}')
+        print(f'output_error_signal shape is: {output_error_signal.shape}')
+        x = 0
+        gradient = np.dot(features.T[:,x:], output_error_signal[x:])
+        print(f'Feat End: {features.T[:,x:]}')
+        print(f'Err End: {output_error_signal[x:]}')
+        print(f'Grad are: {gradient}')
+        print(f'Grad shape is: {gradient.shape}')
         weights += learning_rate * gradient
 
     return weights
