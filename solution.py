@@ -77,11 +77,20 @@ def Sigmoid(vector):
     '''
     @vector is an array-like structure
     '''
+    print(f'Minimum je: {np.min(vector)}')
     return 1/(1+np.exp(-vector))
 
+def MinMaxTrans(number, min, max):
+    '''
+    Function performin min max normalization
+    '''
+    return (number - min)/(max - min)
+
 def fnLstOrd(string):
+    min = 0
+    max = 2**16
     # 30 mam ako za najdlhsie slovo...nemal by som to pouzivat takto
-    return np.append(np.array([ord(letter) for letter in string]),np.zeros(30-len(string)),0)
+    return np.append(np.array([MinMaxTrans(ord(letter),min,max) for letter in string]),np.zeros(30-len(string)),0)
 
 def PrepareFeatures(df_sk,df_hu):
     '''
@@ -102,10 +111,8 @@ def PrepareFeatures(df_sk,df_hu):
     zr = np.zeros(df_sk.count())
     # hu je 1
     on = np.ones(df_hu.count())
-    print(f'Toto je ones: {on}')
-    print(f'Test row_stack je :{np.append(zr,on)}')
+
     target = np.append(zr,on)
-    print(f'Perm je {perm}')
 
     return c[perm],target[perm]
 
@@ -113,24 +120,24 @@ def PrepareFeatures(df_sk,df_hu):
 def LogReg(features,targets,weights,learning_rate,repeats):
     '''
     '''
-    print(f'Features are: {features.T}')
-    for i in range(5):
+    # print(f'Features are: {features.T}')
+    for i in range(repeats):
         scores = np.dot(features, weights)
-        print(f'Scores are: {scores}')
-        predictions = Sigmoid(scores)>=0.5
-        print(f'Predic are: {predictions}')
-        print(f'Targ are: {targets}')
+        # print(f'Scores are: {scores}')
+        predictions = Sigmoid(scores)
+        # print(f'Predic are: {predictions}')
+        # print(f'Targ are: {targets}')
         # Update weights with gradient
         output_error_signal = targets - predictions
-        print(f'OUT err: {np.sum(output_error_signal)}')
-        print(f'Feeat trans shape is: {features.T.shape}')
-        print(f'output_error_signal shape is: {output_error_signal.shape}')
-        x = 0
-        gradient = np.dot(features.T[:,x:], output_error_signal[x:])
-        print(f'Feat End: {features.T[:,x:]}')
-        print(f'Err End: {output_error_signal[x:]}')
-        print(f'Grad are: {gradient}')
-        print(f'Grad shape is: {gradient.shape}')
+        # print(f'OUT err: {np.sum(output_error_signal)}')
+        # print(f'Feeat trans shape is: {features.T.shape}')
+        # print(f'output_error_signal shape is: {output_error_signal.shape}')
+        # x = 0
+        gradient = np.dot(features.T, output_error_signal)
+        # print(f'Feat End: {features.T}')
+        # print(f'Err End: {output_error_signal[x:]}')
+        # print(f'Grad are: {gradient}')
+        # print(f'Grad shape is: {gradient.shape}')
         weights += learning_rate * gradient
 
     return weights
@@ -143,14 +150,15 @@ def TaskTwo(df_sk,df_hu,learning_rate):
     '''
 
     df_sk['ch_rep'] = df_sk['word'].apply(fnLstOrd)
-    df_hu['ch_rep'] = df_sk['word'].apply(fnLstOrd)
+    df_hu['ch_rep'] = df_hu['word'].apply(fnLstOrd)
+    # PrepareFeatures(df_sk['ch_rep'],df_hu['ch_rep'])
     features,targets = PrepareFeatures(df_sk['ch_rep'],df_hu['ch_rep'])
 
-    print(f'Features shape is: {features.shape}')
+    # print(f'Features shape is: {features.shape}')
     # set weights to zero
     weights = np.zeros(features.shape[1])
 
-    WG = LogReg(features=features,targets=targets,weights=weights,learning_rate=0.5,repeats=3000)
+    WG = LogReg(features=features,targets=targets,weights=weights,learning_rate=0.1,repeats=3000)
     print(f'Final weights are: {WG}')
 
 
