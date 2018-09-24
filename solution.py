@@ -77,7 +77,6 @@ def Sigmoid(vector):
     '''
     @vector is an array-like structure
     '''
-    print(f'Minimum je: {np.min(vector)}')
     return 1/(1+np.exp(-vector))
 
 def MinMaxTrans(number, min, max):
@@ -97,24 +96,35 @@ def PrepareFeatures(df_sk,df_hu):
     Metoda pripravy slova zo slovnika, ako podklad pre log regresiu
     '''
 
-    c = df_sk[0]
+    feat = df_sk[0]
     for i in range(df_sk.count()-1):
-        c = np.row_stack((c,df_sk[i+1]))
+        feat = np.row_stack((feat,df_sk[i+1]))
     for i in range(df_hu.count()):
-        c = np.row_stack((c,df_hu[i]))
+        feat = np.row_stack((feat,df_hu[i]))
 
-    intercept = np.ones((c.shape[0],1))
-    c = np.concatenate((intercept,c),axis=1)
+    # dokoncenie features
     np.random.seed(42)
-    perm = np.random.permutation(len(c))
+    perm = np.random.permutation(len(feat))
+
+    intercept = np.ones((feat.shape[0],1))
+    feat = np.concatenate((intercept,feat),axis=1)
+    # tvorim permutaciu nad zdrojovymi datami
+    feat = feat[perm]
+    index_split = int((len(feat)/5)*4)
+    feat_train = feat[:index_split]
+    feat_test = feat[index_split:]
+
     # sk je 0
     zr = np.zeros(df_sk.count())
     # hu je 1
     on = np.ones(df_hu.count())
 
-    target = np.append(zr,on)
+    target = np.append(zr,on)[perm]
 
-    return c[perm],target[perm]
+    index_split = int((len(target)/5)*4)
+    target_train = target[:int((len(target)/5)*4)]
+    target_test = target[int((len(target)/5)*4):]
+    return feat,target
 
 
 def LogReg(features,targets,weights,learning_rate,repeats):
