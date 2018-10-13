@@ -110,6 +110,7 @@ def PrepareFeatures(df_sk,df_hu):
     feat = np.concatenate((intercept,feat),axis=1)
     # tvorim permutaciu nad zdrojovymi datami
     feat = feat[perm]
+    # 20% delenie train a test
     index_split = int((len(feat)/5)*4)
     feat_train = feat[:index_split]
     feat_test = feat[index_split:]
@@ -121,10 +122,10 @@ def PrepareFeatures(df_sk,df_hu):
 
     target = np.append(zr,on)[perm]
 
-    index_split = int((len(target)/5)*4)
-    target_train = target[:int((len(target)/5)*4)]
-    target_test = target[int((len(target)/5)*4):]
-    return feat,target
+    #index_split = int((len(target)/5)*4)
+    target_train = target[:index_split]
+    target_test = target[index_split:]
+    return feat_train,feat_test,target_train,target_test
 
 
 def LogReg(features,targets,weights,learning_rate,repeats):
@@ -152,6 +153,17 @@ def LogReg(features,targets,weights,learning_rate,repeats):
 
     return weights
 
+def Accur(pred,target):
+    '''
+    Accuracy calculation
+    @pred is a vector of predictions
+    @target is a vector of target class
+    '''
+    miss_class = np.sum(np.abs(pred - target))
+    acc = miss_class/len(target)
+    return acc
+
+
 # tu spravim logisticku regresiu
 def TaskTwo(df_sk,df_hu,learning_rate):
     '''
@@ -162,14 +174,30 @@ def TaskTwo(df_sk,df_hu,learning_rate):
     df_sk['ch_rep'] = df_sk['word'].apply(fnLstOrd)
     df_hu['ch_rep'] = df_hu['word'].apply(fnLstOrd)
     # PrepareFeatures(df_sk['ch_rep'],df_hu['ch_rep'])
-    features,targets = PrepareFeatures(df_sk['ch_rep'],df_hu['ch_rep'])
+    features_train,features_test,targets_train,targets_test = PrepareFeatures(df_sk['ch_rep'],df_hu['ch_rep'])
 
     # print(f'Features shape is: {features.shape}')
     # set weights to zero
-    weights = np.zeros(features.shape[1])
+    weights = np.zeros(features_train.shape[1])
 
-    WG = LogReg(features=features,targets=targets,weights=weights,learning_rate=0.1,repeats=3000)
-    print(f'Final weights are: {WG}')
+    model_weights = LogReg(features=features_train,
+                            targets=targets_train,
+                            weights=weights,
+                            learning_rate=0.01,
+                            repeats=4000)
+    print(f'Final weights are: {model_weights}')
+    ###########################
+    ## test nauceneho modelu ##
+    ###########################
+
+    model_acc = Accur(Sigmoid(np.dot(features_train, model_weights))>=0.5,targets_train)
+    print(f'Trainning acc is: {model_acc}')
+    scores = np.dot(features_test, model_weights)
+    pred_test = Sigmoid(scores)>=0.5
+    # print(f'Predictions {pred_test}')
+    # print(f'Target {targets_test}')
+    test_acc = Accur(pred_test,targets_test)
+    print(f'Test acc is: {test_acc}')
 
 
 # main metoda
